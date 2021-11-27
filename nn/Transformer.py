@@ -61,7 +61,7 @@ class RelativeAttention(nn.Module):
             relative_indices = self.relative_indices
             relative_bias = self.relative_bias
         else:
-            relative_indices = self._get_relative_indices(H, W)
+            relative_indices = self._get_relative_indices(H, W).to(x.device)
             relative_bias = self._interpolate_relative_bias(H, W)
 
         relative_indices = relative_indices.view(1, 1, *relative_indices.size()).expand(b, h, -1, -1)

@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from MBConv import MBConvForRelativeAttention
 from Transformer import TransformerWithRelativeAttention, ProjectionHead
-from utils import print_num_params
 
 configs = {
     'coatnet-0': {
@@ -97,10 +96,14 @@ class CoAtNet(nn.Module):
                                    self.config['num_channels'][4],
                                    self.config['num_blocks'][4],
                                    self.config['expand_ratio'][3])
-        if num_classes is not None:
-            self.head = ProjectionHead(self.config['num_channels'][-1], num_classes, act_fn=head_act_fn, ff_dropout=head_dropout)
-        else:
-            self.head = None
+        self.include_head = num_classes is not None
+        if self.include_head:
+            if isinstance(num_classes, int):
+                self.single_head = True
+                num_classes = [num_classes]
+            else:
+                self.single_head = False
+            self.heads = nn.ModuleList([ProjectionHead(self.config['num_channels'][-1], nc, act_fn=head_act_fn, ff_dropout=head_dropout) for nc in num_classes])
 
     def _make_stem(self, in_channels):
         return nn.Sequential(*[
@@ -143,22 +146,26 @@ class CoAtNet(nn.Module):
         x = self.s3(x)
         x = self.s4(x)
         x = F.adaptive_avg_pool2d(x, 1).view(x.size(0), -1)
-        if self.head is not None:
-            x = self.head(x)
+        if self.include_head:
+            if self.single_head:
+                return self.heads[0](x)
+            return [head(x) for head in self.heads]
         return x
 
 
 if __name__ == '__main__':
     import torch
     from utils import print_num_params
+    from fvcore.nn import FlopCountAnalysis
 
-    for i in range(8):
-        config=f'coatnet-{i}'
-        print(config)
-        coatnet = CoAtNet(224, 224, 3, config=config, num_classes=None)
-        #print(coatnet)
-        print_num_params(coatnet)
-        coatnet.eval()
-        random_image = torch.randint(0, 256, size=(1, 3, 224, 224)).float() / 255
-        with torch.no_grad():
-            output = coatnet(random_image)
+    image_size = (3, 224, 224)
+    config=f'coatnet-0'
+    coatnet = CoAtNet(image_size[1], image_size[2], image_size[0], config=config, num_classes=None)
+    coatnet.to('cuda:0')
+    coatnet.eval()
+    random_image = torch.randint(0, 256, size=(1, *image_size)).float() / 255
+    with torch.no_grad():
+        flops = FlopCountAnalysis(coatnet, random_image.to('cuda:0'))
+    print(config)
+    print(f'Approx FLOPs count: {flops.total() / 1e9:.2f}')
+    print_num_params(coatnet)
