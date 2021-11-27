@@ -48,20 +48,21 @@ configs = {
         'n_head': 64,
         'block_types': ['C', 'C', 'T', 'T']
     },
-    'coatnet-6': {
-        'num_blocks': [2, 2, 4, [8, 42], 2],
-        'num_channels': [192, 192, 384, [768, 1536], 2048],
-        'expand_ratio': [4, 4, 4, 4, 4],
-        'n_head': 128,
-        'block_types': ['C', 'C', 'C-T', 'T']
-    },
-    'coatnet-7': {
-        'num_blocks': [2, 2, 4, [8, 42], 2],
-        'num_channels': [192, 256, 512, [1024, 2048], 3072],
-        'expand_ratio': [4, 4, 4, 4, 4],
-        'n_head': 128,
-        'block_types': ['C', 'C', 'C-T', 'T']
-    }
+    # Something's not right with this one
+    # 'coatnet-6': {
+    #     'num_blocks': [2, 2, 4, [8, 42], 2],
+    #     'num_channels': [192, 192, 384, [768, 1536], 2048],
+    #     'expand_ratio': [4, 4, 4, 4, 4],
+    #     'n_head': 128,
+    #     'block_types': ['C', 'C', 'C-T', 'T']
+    # },
+    # 'coatnet-7': {
+    #     'num_blocks': [2, 2, 4, [8, 42], 2],
+    #     'num_channels': [192, 256, 512, [1024, 2048], 3072],
+    #     'expand_ratio': [4, 4, 4, 4, 4],
+    #     'n_head': 128,
+    #     'block_types': ['C', 'C', 'C-T', 'T']
+    # }
 }
 
 blocks = {
